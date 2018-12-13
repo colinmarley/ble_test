@@ -13,9 +13,9 @@
             <div id="mainPage">
                 <ul id="deviceList">
                 </ul>
-                <button id="scanbutton">SCAN</button>
-                <br>
-                <button id='noConnectBtn'>Continue without connecting</button>
+                <div id='scanButton'>
+                    <button id="scanbutton">SCAN</button>
+                </div>
                 <div id="batteryState"></div>
                 <div>
                     <button id="pauseTimerButton">PAUSE ||</button>
@@ -26,20 +26,42 @@
                     <button id="setTopicSubmitButton">Set Topic</button>
                 </div>
 
+                <div id='bleReading'>
+                    <p id='connectedDevice'></p>
+                </div>
+
+                <div id='char1Readings' class='readings'>
+                    <ul>
+                        <li id='recordingReading'>Recording: </li>
+                        <li id='muteReading'>Mute: </li>
+                        <li id='batteryReading'>Battery: </li>
+                        <li id='speakerReading'>Speaker: </li>
+                        <li id='bluetoothReading'>Bluetooth: </li>
+                    </ul>
+                </div>
+
+                <div id='char2Readings' class='readings'>
+                    <ul>
+                        <li id='topicReading'>Topic: </li>
+                        <li id='timerReading'>Timer: </li>
+                        <li id='volumeReading'>Volume: </li>
+                    </ul>
+                </div>
+
                 <h3>Write to characteristic 1:</h3>
-                Limit one Character
                 <input type="text" id="writeText1">
                 <button id="writeChar1Button">Write</button>
                 <br>
                 <h3>Read from characteristic 1:</h3>
+                <p id='char1'></p>
                 <input type="text" id="readText1">
                 <button id="readChar1Button">Read</button>
                 <h3>Write to characteristic 2:</h3>
-                Limit 20 Characters
                 <input type="text" id="writeText2">
                 <button id="writeChar2Button">Write</button>
                 <br>
                 <h3>Read from characteristic 2:</h3>
+                <p id='char2'></p>
                 <input type="text" id="readText2">
                 <button id="readChar2Button">Read</button>
                 <button id="disconnectButton">Disconnect</button>

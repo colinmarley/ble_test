@@ -147,7 +147,6 @@ var app = {
     bindEvents: function() {
         document.addEventListener('deviceready', this.onDeviceReady, false);
         scanbutton.addEventListener('touchstart', this.refreshDeviceList, false);
-        noConnectBtn.addEventListener('touchstart', this.continueWithoutConnecting, false);
         readChar1Button.addEventListener('touchstart', this.readCharacteristic1, false);
         writeChar1Button.addEventListener('touchstart', this.writeCharacteristic1, false);
         readChar2Button.addEventListener('touchstart', this.readCharacteristic2, false);
@@ -157,7 +156,6 @@ var app = {
         startTimerButton.addEventListener('touchstart', this.startTimer, false);
         pauseTimerButton.addEventListener('touchstart', this.pauseTimer, false);
         setTopicSubmitButton.addEventListener('touchstart', this.setTopic, false);
-
     },
 
     onDeviceReady: function() {        
@@ -168,10 +166,11 @@ var app = {
         deviceList.innerHTML = "";  //Empties the list 
         //Scan for all devices
         ble.scan([], 5, app.onDiscoverDevice, app.onError);
-
     },
 
     onDiscoverDevice: function(device) {
+        scanbutton.innerHTML = 'RESCAN';
+        deviceList.hidden = false;
         let uuid = generateServiceDataFromAdvertising(device.advertising);
         if (uuid == uuids.service) {
             console.log(JSON.stringify(device));
@@ -187,6 +186,7 @@ var app = {
     },
 
     connect: function(e) {
+        scanbutton.hidden = true;
         var deviceId = e.target.dataset.deviceId,
             onConnect = function(device) {
                 deviceList.innerHTML = "<h3 class='confirmation'>Connected To: " + device.name + "</h3>";
@@ -199,12 +199,7 @@ var app = {
                 startTimerButton.dataset.deviceId = deviceId;
                 setTopicSubmitButton.dataset.deviceId = deviceId;
             };
-
         ble.connect(deviceId, (device) => onConnect(device), app.onError);
-    },
-
-    continueWithoutConnecting: function(e) {
-
     },
 
     pauseTimer: function(event) {
@@ -325,6 +320,9 @@ var app = {
     },
 
     showMainPage: function() {
+        scanbutton.innerHTML = 'SCAN';
+        scanbutton.hidden = false;
+        deviceList.hidden = true;
     },
 
     showDetailPage: function() {

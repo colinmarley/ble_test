@@ -22,16 +22,7 @@ button {
 }
 
 #mainPage {
-    text-align:center;
-}
-
-#detailPage {
-    text-align:center;
-    font-size: 1em;
-    margin: 10px;
-    border: 3px solid black;
-    border-radius: 15px;
-    background-color: white;
+    text-align:left;
 }
 
 #detailPage div {
@@ -43,8 +34,23 @@ button {
     font-size: 0.6em; /* undo 2em from parent */
 }
 
+#scanbutton {
+    width: 92%;
+}
+
+.scanButton {
+    display: flex;
+    left: 0px;
+    top: 0px;
+    text-align: center;
+}
+
 .confirmation {
     align-self: center;
+}
+
+.readings {
+    display: inline-block;
 }
 
 ul {
