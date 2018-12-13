@@ -20,6 +20,50 @@
 
 var chunkSize = 18;
 let TOPIC_HEADER = 0x36;
+const SERVICE_DATA_KEY = '0x07';
+
+//Functions
+
+function asHexString(i) {
+  let hex = i.toString(16);
+  return "0x" + ((hex.length === 1)? '0': '') + hex;
+}
+
+function parseAdvertisingData(buffer) {
+  var length, type, data, i = 0, advertisementData = {};
+  var bytes = new Uint8Array(buffer);
+
+  // decode type constants from https://www.bluetooth.org/en-us/specification/assigned-numbers/generic-access-profile
+  while (length !== 0) {
+      length = bytes[i] & 0xFF;
+      i++;
+      type = bytes[i] & 0xFF;
+      i++;
+      data = bytes.slice(i, i + length - 1).buffer; // length includes type byte, but not length byte
+      i += length - 2;  // move to end of data
+      i++;
+
+      advertisementData[asHexString(type)] = data;
+  }
+  return advertisementData;
+}
+
+const DASHES = ['','' ,'-','-','-','-','',''];
+
+function generateServiceDataFromAdvertising(buffer) {
+  let adData = parseAdvertisingData(buffer);
+  let serviceData = adData[SERVICE_DATA_KEY];
+
+  let uuid = "";
+
+  if (serviceData) {
+    let uuidBytes = new Uint16Array(serviceData);
+    for (let i = uuidBytes.length - 1; i >= 0; --i) {
+      uuid += DASHES[i] + uuidBytes[i].toString(16);
+    }
+  }
+  return uuid;
+}
 
 function bytesToString(buffer) {
     return String.fromCharCode.apply(null, new Uint8Array(buffer));
@@ -87,7 +131,7 @@ function packChar2 (header, num, data) {
     return pack;
 }
 
-var dead = {
+var uuids = {
     service: "dead1400-dead-c0de-dead-c0dedeadc0de",
     char1: "dead1401-dead-c0de-dead-c0dedeadc0de",
     char2: "dead1402-dead-c0de-dead-c0dedeadc0de"
@@ -98,7 +142,6 @@ var dead = {
 var app = {
     initialize: function() {
         this.bindEvents();
-        detailPage.hidden = true;
     },
 
     bindEvents: function() {
@@ -118,7 +161,7 @@ var app = {
     },
 
     onDeviceReady: function() {        
-        app.refreshDeviceList();
+        // app.refreshDeviceList();
     },
 
     refreshDeviceList: function() {
@@ -129,7 +172,8 @@ var app = {
     },
 
     onDiscoverDevice: function(device) {
-        if (device.name == 'e') {
+        let uuid = generateServiceDataFromAdvertising(device.advertising);
+        if (uuid == uuids.service) {
             console.log(JSON.stringify(device));
             var listItem = document.createElement('li'),
                 html = '<b>' + device.name + '</b><br/>' +
@@ -140,13 +184,12 @@ var app = {
             listItem.innerHTML = html;
             deviceList.appendChild(listItem);
         }
-
     },
 
     connect: function(e) {
         var deviceId = e.target.dataset.deviceId,
-            onConnect = function() {
-
+            onConnect = function(device) {
+                deviceList.innerHTML = "<h3 class='confirmation'>Connected To: " + device.name + "</h3>";
                 readChar1Button.dataset.deviceId = deviceId;
                 readChar2Button.dataset.deviceId = deviceId;
                 writeChar1Button.dataset.deviceId = deviceId;
@@ -155,14 +198,13 @@ var app = {
                 pauseTimerButton.dataset.deviceId = deviceId;
                 startTimerButton.dataset.deviceId = deviceId;
                 setTopicSubmitButton.dataset.deviceId = deviceId;
-                app.showDetailPage();
             };
 
-        ble.connect(deviceId, onConnect, app.onError);
+        ble.connect(deviceId, (device) => onConnect(device), app.onError);
     },
 
     continueWithoutConnecting: function(e) {
-        app.showDetailPage();
+
     },
 
     pauseTimer: function(event) {
@@ -174,7 +216,7 @@ var app = {
         console.log("val: " + val);
         vBuf = stringToBytes(val);
 
-        ble.write(deviceId, dead.service, dead.char1, vBuf, console.log("Paused Timer: data = 0x32"), app.onError);
+        ble.write(deviceId, uuids.service, uuids.char1, vBuf, console.log("Paused Timer: data = 0x32"), app.onError);
     },
 
     setTopic: function (event) {
@@ -186,7 +228,7 @@ var app = {
             var vBuf = new Uint8Array(len);
             vBuf = stringToBytes(val);
 
-            ble.write(deviceId, dead.service, dead.char2, vBuf, console.log("wrote '" + val + "' to characteristic 2"), app.onError);
+            ble.write(deviceId, uuids.service, uuids.char2, vBuf, console.log("wrote '" + val + "' to characteristic 2"), app.onError);
         } else {
             alert("Please limit topic length to 20 characters or less");
         }
@@ -205,7 +247,7 @@ var app = {
 
             console.log(vBuf);  //should be an array buffer by now
 
-            ble.write(deviceId, dead.service, dead.char1, vBuf, console.log("Wrote (" + val + ") to Characteristic1") , app.onError);
+            ble.write(deviceId, uuids.service, uuids.char1, vBuf, console.log("Wrote (" + val + ") to Characteristic1") , app.onError);
         } else {
             alert("Please limit to 1 Character");
         }
@@ -220,7 +262,7 @@ var app = {
         console.log("val: " + val);
         vBuf = stringToBytes(val);
 
-        ble.write(deviceId, dead.service, dead.char1, vBuf, console.log("Started Timer: data = 0x31"), app.onError);   
+        ble.write(deviceId, uuids.service, uuids.char1, vBuf, console.log("Started Timer: data = 0x31"), app.onError);   
     },
 
     writeCharacteristic2: function(event) {
@@ -236,7 +278,7 @@ var app = {
 
             console.log(vBuf);  //should be an array buffer by now
 
-            ble.write(deviceId, dead.service, dead.char2, vBuf, console.log("Wrote (" + val + ") to Characteristic2") , app.onError);
+            ble.write(deviceId, uuids.service, uuids.char2, vBuf, console.log("Wrote (" + val + ") to Characteristic2") , app.onError);
         // } else {
             //this should prepare a 2D array hoding the array buffers to send as packets to the device
             // var tempChunk = chunkIt(chunkSize, data);
@@ -252,13 +294,13 @@ var app = {
     readCharacteristic1: function(event) {
         console.log("readCharacteristic1");
         var deviceId = event.target.dataset.deviceId;
-        ble.read(deviceId, dead.service, dead.char1, app.onReadCharacteristic1, app.onError);
+        ble.read(deviceId, uuids.service, uuids.char1, app.onReadCharacteristic1, app.onError);
     },
 
     readCharacteristic2: function(event) {
         console.log("readCharacteristic");
         var deviceId = event.target.dataset.deviceId;
-        ble.read(deviceId, dead.service, dead.char2, app.onReadCharacteristic2, app.onError);
+        ble.read(deviceId, uuids.service, uuids.char2, app.onReadCharacteristic2, app.onError);
     },
 
     onReadCharacteristic1: function(data) {
@@ -283,13 +325,10 @@ var app = {
     },
 
     showMainPage: function() {
-        mainPage.hidden = false;
-        detailPage.hidden = true;
     },
 
     showDetailPage: function() {
-        mainPage.hidden = true;
-        detailPage.hidden = false;
+        
     },
 
     onError: function(reason) {
