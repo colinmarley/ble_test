@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
+        <title>SensorTag</title>
+    </head>
+    <body>
+        <div class="app">
+            <p style="text-align:center; padding-top: 20px;">Choose a peripheral with a battery service</p>
+            <div id="mainPage">
+                <ul id="deviceList">
+                </ul>
+                <button id="scanbutton">SCAN</button>
+            </div>
+            <div id="detailPage">
+                <div id="batteryState"></div>
+                <div>
+                    <button id="pauseTimerButton">PAUSE ||</button>
+                    <button id="startTimerButton">Start |></button>
+                </div>
+                <div>
+                    <input type="text" id="topic-text">
+                    <button id="setTopicSubmitButton">Set Topic</button>
+                </div>
+
+                <h3>Write to characteristic 1:</h3>
+                Limit one Character
+                <input type="text" id="writeText1">
+                <button id="writeChar1Button">Write</button>
+                <br>
+                <h3>Read from characteristic 1:</h3>
+                <input type="text" id="readText1">
+                <button id="readChar1Button">Read</button>
+                <h3>Write to characteristic 2:</h3>
+                Limit 20 Characters
+                <input type="text" id="writeText2">
+                <button id="writeChar2Button">Write</button>
+                <br>
+                <h3>Read from characteristic 2:</h3>
+                <input type="text" id="readText2">
+                <button id="readChar2Button">Read</button>
+                <button id="disconnectButton">Disconnect</button>
+            </div>
+        </div>
+        <script type="text/javascript" src="js/cordova.js"></script>
+        <!-- <script type="text/javascript" charset="utf-8" src="js/SQLitePlugin.js"></script> -->
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/index.js"></script>
+        <script src="vconsole.min.js"></script>
+        <script type="text/javascript">
+            app.initialize();
+            var vConsole = new VConsole();
+        </script>
+    </body>
+</html>

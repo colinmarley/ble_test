@@ -1,0 +1,2 @@
+#TargetFrameworkVersion=:PlatformToolSet=v120_wp81:EnableManagedIncrementalBuild=false:VCToolArchitecture=Native32Bit
+release|arm|C:\Users\raphael\Documents\Visual Studio 2015\Projects\BlankCordovaApp2\BlankCordovaApp3\plugins\cordova-sqlite-legacy-build-support\src\windows\SQLite3-Win-RT\SQLite3\SQLite3.WindowsPhone\|
