@@ -186,9 +186,9 @@ var app = {
     },
 
     connect: function(e) {
-        scanbutton.hidden = true;
         var deviceId = e.target.dataset.deviceId,
             onConnect = function(device) {
+                scanbutton.hidden = true;
                 deviceList.innerHTML = "<h3 class='confirmation'>Connected To: " + device.name + "</h3>";
                 readChar1Button.dataset.deviceId = deviceId;
                 readChar2Button.dataset.deviceId = deviceId;
@@ -267,23 +267,12 @@ var app = {
         console.log("val: " + val);
         console.log("val type: " + typeof val);
         console.log(typeof val + " length: " + val.length);
-        // if (val.length <=18) {
-            var vBuf = new Uint8Array(1);
-            vBuf = stringToBytes(val);
+        var vBuf = new Uint8Array(1);
+        vBuf = stringToBytes(val);
 
-            console.log(vBuf);  //should be an array buffer by now
+        console.log(vBuf);  //should be an array buffer by now
 
-            ble.write(deviceId, uuids.service, uuids.char2, vBuf, console.log("Wrote (" + val + ") to Characteristic2") , app.onError);
-        // } else {
-            //this should prepare a 2D array hoding the array buffers to send as packets to the device
-            // var tempChunk = chunkIt(chunkSize, data);
-            // var tempPack = [] * (tempChunk.length);
-            // for (var i = 0; i < tempChunk.length; i++) {
-            //     tempPack[i] = new Uint8Array(20);
-            // } 
-            // tempPack = packChar2(TOPIC_HEADER, tempChunk.length, tempChunk);
-            // console.log("tempPack: " + tempPack);
-        // }
+        ble.write(deviceId, uuids.service, uuids.char2, vBuf, console.log("Wrote (" + val + ") to Characteristic2") , app.onError);
     },
 
     readCharacteristic1: function(event) {
