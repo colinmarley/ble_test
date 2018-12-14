@@ -18,19 +18,19 @@
                 </div>
 
                 <div id='char1Readings' class='readings'>
-                        <p id='recordingReading'>Recording: </p>
-                        <p id='muteReading'>Mute: </p>
-                        <p id='batteryReading'>Battery: </p>
-                        <p id='speakerReading'>Speaker: </p>
-                        <p id='bluetoothReading'>Bluetooth: </p>
+                        <button id='recordingReading'>Recording: </button>
+                        <button id='muteReading'>Mute: </button>
+                        <button id='batteryReading'>Battery: </button>
+                        <button id='speakerReading'>Speaker: </button>
+                        <button id='bluetoothReading'>Bluetooth: </button>
                 </div>
 
                 <div id='midLine'></div>
 
                 <div id='char2Readings' class='readings'>
-                        <p id='topicReading'>Topic: </p>
-                        <p id='timerReading'>Timer: </p>
-                        <p id='volumeReading'>Volume: </p>
+                        <p>Topic: <p id='topicReading'></p></p>
+                        <p>Timer: <p id='timerReading'></p</p>
+                        <p>Volume: <p id='volumeReading'></p</p>
                         <div id='timerControl'>
                             <h3 id='timerControlTitle'>Timer Controls</h3>
                             <button id="pauseTimerButton" class='timerButton'>Pause</button>
@@ -39,37 +39,26 @@
                 </div>
 
                 <div id='setTopicDiv'>
+                    <input type='number' id='timer-text'>
+                    <button id='setTimerSubmitButton' class='timerButton'>Set Timer</button>
                     <input type="text" id="topic-text">
                     <button id="setTopicSubmitButton" class='timerButton'>Set Topic</button>
                 </div>
 
                 <div id='writeChar1Div'>
-                    <h3>Write to characteristic 1:</h3>
+                    Write to characteristic 1:
                     <input type="text" id="writeText1">
                     <button id="writeChar1Button" class='timerButton'>Write</button>
                 </div>
-                
-                <div id='readChar1Div'>
-                    <h3>Read from characteristic 1:</h3>
-                    <p id='char1'></p>
-                    <input type="text" id="readText1">
-                    <button id="readChar1Button" class='timerButton'>Read</button>
-                </div>
 
                 <div id='writeChar2Div'>
-                    <h3>Write to characteristic 2:</h3>
+                    Write to characteristic 2:
                     <input type="text" id="writeText2">
                     <button id="writeChar2Button" class='timerButton'>Write</button>
                 </div>
-
-                <div id='readChar2Div'>
-                    <h3>Read from characteristic 2:</h3>
-                    <p id='char2'></p>
-                    <input type="text" id="readText2">
-                    <button id="readChar2Button" class='timerButton'>Read</button>
+                <div id='disconnectDiv'>
+                    <button id="disconnectButton" class='timerButton'>Disconnect</button>
                 </div>
-
-                <button id="disconnectButton" class='timerButton'>Disconnect</button>
             </div>
         </div>
         <script type="text/javascript" src="js/cordova.js"></script>

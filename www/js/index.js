@@ -147,9 +147,7 @@ var app = {
     bindEvents: function() {
         document.addEventListener('deviceready', this.onDeviceReady, false);
         scanbutton.addEventListener('touchstart', this.refreshDeviceList, false);
-        readChar1Button.addEventListener('touchstart', this.readCharacteristic1, false);
         writeChar1Button.addEventListener('touchstart', this.writeCharacteristic1, false);
-        readChar2Button.addEventListener('touchstart', this.readCharacteristic2, false);
         writeChar2Button.addEventListener('touchstart', this.writeCharacteristic2, false);
         disconnectButton.addEventListener('touchstart', this.disconnect, false);
         deviceList.addEventListener('touchstart', this.connect, false); // assume not scrolling

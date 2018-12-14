@@ -38,15 +38,51 @@ button {
 
 #midLine {
     display: inline-block;
-    height: 140px;
+    height: 150px;
     width: 2px;
     background-color: black;
     margin-left: 4%;
     margin-right: 4%;
 }
 
+#char1Readings button{
+    height: 20px;
+    width: auto;
+    font-size: 10pt;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+#char2Readings p {
+    font-size: 12pt;
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
 #char2Readings {
     position: absolute;
+}
+
+#disconnectButton {
+    font-size: 12pt;
+}
+
+#writeChar1Div {
+    text-align: center;
+}
+
+#writeChar2Div {
+    text-align: center;
+}
+
+#setTopicDiv {
+    margin-top: 10px;
+    /* text-align: center; */
+}
+
+#setTopicDiv button {
+    width: 145px;
 }
 
 .confirmation {
@@ -79,6 +115,10 @@ button {
 #timerControlTitle {
     margin-top: 5px;
     margin-bottom: 0px;
+}
+
+#disconnectDiv {
+    text-align: center;
 }
 
 .timerButton {

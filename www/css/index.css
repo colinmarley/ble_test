@@ -1,5 +1,5 @@
 body {
-    font-family: "Helvetica Neue";
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
     font-weight: lighter;
     color: #2a2a2a;
     background-color: #f0f0ff;
@@ -45,12 +45,12 @@ button {
     margin-right: 4%;
 }
 
-#char1Readings button{
-    height: 20px;
+#char1Readings button {
+    height: 25px;
     width: auto;
     font-size: 10pt;
-    margin-top: 5px;
-    margin-bottom: 5px;
+    margin-top: 10px;
+    margin-bottom: 10px;
     display: block;
 }
 
@@ -65,7 +65,7 @@ button {
 }
 
 #disconnectButton {
-    font-size: 10pt;
+    font-size: 12pt;
 }
 
 #writeChar1Div {
@@ -77,8 +77,7 @@ button {
 }
 
 #setTopicDiv {
-    margin-top: 10px;
-    /* text-align: center; */
+    margin-top: 5%;
 }
 
 #setTopicDiv button {
