@@ -117,6 +117,10 @@ button {
     margin-bottom: 0px;
 }
 
+#disconnectDiv {
+    text-align: center;
+}
+
 .timerButton {
     border: 2px solid black;
     font-size: 12pt;
