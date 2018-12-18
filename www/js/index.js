@@ -18,6 +18,12 @@
 /* jshint browser: true , devel: true*/
 'use strict';
 
+let deviceId;
+let isConnected = false,
+    isRecording = false,
+    isMuted = false,
+    isSpeakerConnected = false,
+    isVibrating = false;
 var chunkSize = 18;
 let TOPIC_HEADER = 0x36;
 const SERVICE_DATA_KEY = '0x07';
@@ -131,10 +137,46 @@ function packChar2 (header, num, data) {
     return pack;
 }
 
+// Characteristic 1
+//   header | Data Size | Function
+//--------------------------------------
+// '1' 0x31 |     0     | Start Timer
+// '2' 0x32 |     0     | Stop Timer
+// '3' 0x33 |     0     | Reset Timer to 0
+// '4' 0x34 |     0     | Mute Audio
+// '5' 0x35 |     0     | Unmute Audio
+
+//      Characteristic 2
+//   header |      Data Size      | Function
+//--------------------------------------------------
+// 'a' 0x61 |(1)->Size (18)->Title| Change Topic
+// 'b' 0x62 |      (4)->Time      | Set Timer
+// 'c' 0x63 |  (?)->Volume Level  | Volume Change
+
 var uuids = {
     service: "dead1400-dead-c0de-dead-c0dedeadc0de",
     char1: "dead1401-dead-c0de-dead-c0dedeadc0de",
     char2: "dead1402-dead-c0de-dead-c0dedeadc0de"
+};
+
+const headers = {
+    //Characteristic 1
+    START_TIMER: '1',   //0x31
+    STOP_TIMER: '2',    //0x32
+    RESET_TIMER: '3',   //0x33
+    MUTE_AUDIO: '4',    //0x34
+    UNMUTE_AUDIO: '5',  //0x35
+    RECORDING_ON: '6',  //0x36
+    RECORDING_OFF: '7', //0x37
+    SPEAKER_ON: '8',    //0x38
+    SPEAKER_OFF: '9',   //0x39
+    VIBRATION_ON: ':',  //0x3A
+    VIBRATION_OFF: ';', //0x3B
+
+    //Characteristic 2
+    SET_TOPIC: 'a',     //0x61
+    SET_TIMER: 'b',     //0x62
+    VOLUME_CHANGE: 'c', //0x63
 };
 
 // var db = null;
@@ -146,17 +188,28 @@ var app = {
 
     bindEvents: function() {
         document.addEventListener('deviceready', this.onDeviceReady, false);
-        scanbutton.addEventListener('touchstart', this.refreshDeviceList, false);
-        writeChar1Button.addEventListener('touchstart', this.writeCharacteristic1, false);
-        writeChar2Button.addEventListener('touchstart', this.writeCharacteristic2, false);
-        disconnectButton.addEventListener('touchstart', this.disconnect, false);
         deviceList.addEventListener('touchstart', this.connect, false); // assume not scrolling
+        scanbutton.addEventListener('touchstart', this.refreshDeviceList, false);
+
+        recordingReading.addEventListener('touchstart', this.changeRecordStatus, false);
+        muteReading.addEventListener('touchstart', this.changeMuteStatus, false);
+        speakerReading.addEventListener('touchstart', this.changeSpeakerStatus, false);
+        vibrationReading.addEventListener('touchstart', this.changeVibrationStatus, false);
+
         startTimerButton.addEventListener('touchstart', this.startTimer, false);
         pauseTimerButton.addEventListener('touchstart', this.pauseTimer, false);
-        setTopicSubmitButton.addEventListener('touchstart', this.setTopic, false);
+
+        setTimerSubmitButton.addEventListener('touchstart', this.changeTimer, false);
+        setTopicSubmitButton.addEventListener('touchstart', this.changeTopic, false);
+
+        writeChar1Button.addEventListener('touchstart', this.changeCustomCharacteristic1, false);
+        writeChar2Button.addEventListener('touchstart', this.changeCustomCharacteristic2, false);
+
+        disconnectButton.addEventListener('touchstart', this.disconnect, false);
     },
 
-    onDeviceReady: function() {        
+    onDeviceReady: function() { 
+        console.log('device ready');       
         // app.refreshDeviceList();
     },
 
@@ -184,53 +237,128 @@ var app = {
     },
 
     connect: function(e) {
-        var deviceId = e.target.dataset.deviceId,
-            onConnect = function(device) {
+        deviceId = e.target.dataset.deviceId;
+        var onConnect = function(device) {
                 scanbutton.hidden = true;
                 deviceList.innerHTML = "<h3 class='confirmation'>Connected To: " + device.name + "</h3>";
-                readChar1Button.dataset.deviceId = deviceId;
-                readChar2Button.dataset.deviceId = deviceId;
-                writeChar1Button.dataset.deviceId = deviceId;
-                writeChar2Button.dataset.deviceId = deviceId;
-                disconnectButton.dataset.deviceId = deviceId;
-                pauseTimerButton.dataset.deviceId = deviceId;
-                startTimerButton.dataset.deviceId = deviceId;
-                setTopicSubmitButton.dataset.deviceId = deviceId;
             };
         ble.connect(deviceId, (device) => onConnect(device), app.onError);
     },
 
+    changeRecordStatus: function() {
+        console.log('Record Button Tapped');
+        let val;
+        (isRecording) ? val = headers.RECORDING_OFF : val = headers.RECORDING_ON;
+        console.log('val: ', val);
+        app.writeCharacteristic1(val, function(data) {
+            console.log('Char 1 (RECORD): '+JSON.stringify(data));
+            isRecording = !isRecording;
+        }, app.onError);
+    },
+
+    changeMuteStatus: function() {
+        console.log('Mute Button tapped');
+        let val;
+        (isMuted) ? val = headers.UNMUTE_AUDIO : val = headers.MUTE_AUDIO;
+        app.writeCharacteristic1(val, function(data) {
+            console.log('Char 1 (MUTE): '+JSON.stringify(data));
+            isMuted = !isMuted;
+        }, app.onError);
+    },
+
+    changeSpeakerStatus: function() {
+        console.log('Speaker Button tapped');
+        let val;
+        (isSpeakerConnected) ? val = headers.SPEAKER_OFF : val = headers.SPEAKER_ON;
+        app.writeCharacteristic1(val, function(data) {
+            console.log('Char 1 (SPEAKER): '+JSON.stringify(data));
+            isSpeakerConnected = !isSpeakerConnected;
+        }, app.onError);
+    },
+
+    changeVibrationStatus: function() {
+        console.log('Vibration Button tapped');
+        let val;
+        (isVibrating) ? val = headers.VIBRATION_OFF : val = headers.VIBRATION_ON;
+        app.writeCharacteristic1(val, function(data) {
+            console.log('Char 1 (VIBRATION): '+JSON.stringify(data));
+            isVibrating = !isVibrating;
+        }, app.onError);
+    },
+
+    changeTimer: function() {
+        console.log('change timer tapped');
+        let timerText = document.getElementById('timer-text').value;
+        let val = headers.SET_TIMER + timerText;
+        console.log('timerText: ', timerText);
+        app.writeCharacteristic2(val, function(data) {
+            console.log('Char 2 (SET TIMER): '+JSON.stringify(data));
+        }, app.onError);
+    },
+
+    changeTopic: function() {
+        console.log('change topic tapped');
+        let topicText = document.getElementById('topic-text').value;
+        let val = headers.SET_TOPIC + topicText.length.toString() + topicText;
+        console.log('topicText: ', topicText);
+        app.writeCharacteristic2(val, function(data) {
+            console.log('Char 2 (SET TOPIC): '+JSON.stringify(data));
+        }, app.onError);
+
+    },
+
+    changeVolume: function() {
+        console.log('change volume tapped');
+
+    },
+
+    startTimer: function(event) {
+        console.log("Start Pressed");
+        var val = String(1);
+        app.writeCharacteristic1(val, function(data) {
+            console.log('Char 1 (START TIMER): '+JSON.stringify(data));
+        }, app.onError);
+        // var vBuf = new Uint8Array(1);
+        // console.log ("val type: " + typeof val);
+        // console.log("val: " + val);
+        // vBuf = stringToBytes(val);
+        // ble.write(deviceId, uuids.service, uuids.char1, vBuf, console.log("Started Timer: data = 0x31"), app.onError);   
+    },
+
     pauseTimer: function(event) {
         console.log("Pause Pressed");
-        var deviceId = event.target.dataset.deviceId;
         var val = String(2);
-        var vBuf = new Uint8Array(1);
-        console.log ("val type: " + typeof val);
-        console.log("val: " + val);
-        vBuf = stringToBytes(val);
-
-        ble.write(deviceId, uuids.service, uuids.char1, vBuf, console.log("Paused Timer: data = 0x32"), app.onError);
+        app.writeCharacteristic1(val, function(data) {
+            console.log('Char 1 (PAUSE TIMER): '+JSON.stringify(data));
+        }, app.onError);
+        // var vBuf = new Uint8Array(1);
+        // console.log ("val type: " + typeof val);
+        // console.log("val: " + val);
+        // vBuf = stringToBytes(val);
+        // ble.write(deviceId, uuids.service, uuids.char1, vBuf, console.log("Paused Timer: data = 0x32"), app.onError);
     },
 
-    setTopic: function (event) {
-        console.log("trying to setTopic");
-        var deviceId = event.target.dataset.deviceId;
-        var val = document.getElementById('topic-text').value;
-        var len = val.length;
-        if (len <= 20) {
-            var vBuf = new Uint8Array(len);
-            vBuf = stringToBytes(val);
-
-            ble.write(deviceId, uuids.service, uuids.char2, vBuf, console.log("wrote '" + val + "' to characteristic 2"), app.onError);
-        } else {
-            alert("Please limit topic length to 20 characters or less");
-        }
+    changeCustomCharacteristic1(e) {
+        var val = document.getElementById('writeText1').value;
+        console.log('val (Char 1): ', val);
+        app.writeCharacteristic1(val, function(data) {
+            console.log('Char 1 (CUSTOM COMMAND): '+JSON.stringify(data));
+        }, app.onError);
     },
 
-    writeCharacteristic1: function(event) {
+    changeCustomCharacteristic2(e) {
+        var val = document.getElementById('writeText2').value;
+        console.log('val (Char 2): ', val);
+        app.writeCharacteristic2(val, function(data) {
+            console.log('Char 2 (CUSTOM COMMAND): '+JSON.stringify(data));
+        }, app.onError);
+    },
+
+    writeCharacteristic1: function(val, onSuccess, onError) {
         console.log("writeCharacteristic1");
-        var deviceId = event.target.dataset.deviceId;
-        var val = document.getElementById("writeText1").value;
+        if (val == null) {
+            val = document.getElementById("writeText1").value;
+        }
         console.log("val: " + val);
         console.log("val type: " + typeof val);
         console.log(typeof val + " length: " + val.length);
@@ -240,48 +368,36 @@ var app = {
 
             console.log(vBuf);  //should be an array buffer by now
 
-            ble.write(deviceId, uuids.service, uuids.char1, vBuf, console.log("Wrote (" + val + ") to Characteristic1") , app.onError);
+            ble.write(deviceId, uuids.service, uuids.char1, vBuf, onSuccess, onError);
         } else {
             alert("Please limit to 1 Character");
         }
-    },    
-
-    startTimer: function(event) {
-        console.log("Start Pressed");
-        var deviceId = event.target.dataset.deviceId;
-        var val = String(1);
-        var vBuf = new Uint8Array(1);
-        console.log ("val type: " + typeof val);
-        console.log("val: " + val);
-        vBuf = stringToBytes(val);
-
-        ble.write(deviceId, uuids.service, uuids.char1, vBuf, console.log("Started Timer: data = 0x31"), app.onError);   
     },
 
-    writeCharacteristic2: function(event) {
+    writeCharacteristic2: function(val, onSuccess, onError) {
         console.log("writeCharacteristic2");
-        var deviceId = event.target.dataset.deviceId;
-        var val = document.getElementById("writeText2").value;
         console.log("val: " + val);
         console.log("val type: " + typeof val);
         console.log(typeof val + " length: " + val.length);
-        var vBuf = new Uint8Array(1);
-        vBuf = stringToBytes(val);
+        if (val.length <= 20) {
+            var vBuf = new Uint8Array(20);
+            vBuf = stringToBytes(val);
 
-        console.log(vBuf);  //should be an array buffer by now
+            console.log(vBuf);  //should be an array buffer by now
 
-        ble.write(deviceId, uuids.service, uuids.char2, vBuf, console.log("Wrote (" + val + ") to Characteristic2") , app.onError);
+            ble.write(deviceId, uuids.service, uuids.char2, vBuf, onSuccess, onError);
+        } else {
+            alert('please limit to 18 characters');
+        }
     },
 
     readCharacteristic1: function(event) {
         console.log("readCharacteristic1");
-        var deviceId = event.target.dataset.deviceId;
         ble.read(deviceId, uuids.service, uuids.char1, app.onReadCharacteristic1, app.onError);
     },
 
     readCharacteristic2: function(event) {
         console.log("readCharacteristic");
-        var deviceId = event.target.dataset.deviceId;
         ble.read(deviceId, uuids.service, uuids.char2, app.onReadCharacteristic2, app.onError);
     },
 
@@ -302,7 +418,6 @@ var app = {
     },
 
     disconnect: function(event) {
-        var deviceId = event.target.dataset.deviceId;
         ble.disconnect(deviceId, app.showMainPage, app.onError);
     },
 
