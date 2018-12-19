@@ -31,11 +31,13 @@ const SERVICE_DATA_KEY = '0x07';
 //Functions
 
 function asHexString(i) {
+    console.log('asHexString');
   let hex = i.toString(16);
   return "0x" + ((hex.length === 1)? '0': '') + hex;
 }
 
 function parseAdvertisingData(buffer) {
+    console.log('parseAdvertisingData');
   var length, type, data, i = 0, advertisementData = {};
   var bytes = new Uint8Array(buffer);
 
@@ -57,6 +59,7 @@ function parseAdvertisingData(buffer) {
 const DASHES = ['','' ,'-','-','-','-','',''];
 
 function generateServiceDataFromAdvertising(buffer) {
+    console.log('generateServiceDataFromAdvertising');
   let adData = parseAdvertisingData(buffer);
   let serviceData = adData[SERVICE_DATA_KEY];
 
@@ -214,12 +217,15 @@ var app = {
     },
 
     refreshDeviceList: function() {
+        console.log('scanbutton tapped');
         deviceList.innerHTML = "";  //Empties the list 
         //Scan for all devices
+        console.log('ble: ', ble);
         ble.scan([], 5, app.onDiscoverDevice, app.onError);
     },
 
     onDiscoverDevice: function(device) {
+        console.log('onDiscoverDevice');
         scanbutton.innerHTML = 'RESCAN';
         deviceList.hidden = false;
         let uuid = generateServiceDataFromAdvertising(device.advertising);
@@ -239,6 +245,10 @@ var app = {
     connect: function(e) {
         deviceId = e.target.dataset.deviceId;
         var onConnect = function(device) {
+                ble.startNotification(deviceId, uuids.service, uuids.char1, function(buffer) {
+                    var data = Uint8Array(buffer);
+                    console.log('Data Changed: ', data);
+                }, app.onError);
                 scanbutton.hidden = true;
                 deviceList.innerHTML = "<h3 class='confirmation'>Connected To: " + device.name + "</h3>";
             };
@@ -248,7 +258,8 @@ var app = {
     changeRecordStatus: function() {
         console.log('Record Button Tapped');
         let val;
-        (isRecording) ? val = headers.RECORDING_OFF : val = headers.RECORDING_ON;
+        (isRecording) ? val = '1000' : val = '0000';
+        // (isRecording) ? val = headers.RECORDING_OFF : val = headers.RECORDING_ON;
         console.log('val: ', val);
         app.writeCharacteristic1(val, function(data) {
             console.log('Char 1 (RECORD): '+JSON.stringify(data));
@@ -259,7 +270,8 @@ var app = {
     changeMuteStatus: function() {
         console.log('Mute Button tapped');
         let val;
-        (isMuted) ? val = headers.UNMUTE_AUDIO : val = headers.MUTE_AUDIO;
+        val = '0100';
+        // (isMuted) ? val = headers.UNMUTE_AUDIO : val = headers.MUTE_AUDIO;
         app.writeCharacteristic1(val, function(data) {
             console.log('Char 1 (MUTE): '+JSON.stringify(data));
             isMuted = !isMuted;
@@ -269,7 +281,8 @@ var app = {
     changeSpeakerStatus: function() {
         console.log('Speaker Button tapped');
         let val;
-        (isSpeakerConnected) ? val = headers.SPEAKER_OFF : val = headers.SPEAKER_ON;
+        val = '0010';
+        // (isSpeakerConnected) ? val = headers.SPEAKER_OFF : val = headers.SPEAKER_ON;
         app.writeCharacteristic1(val, function(data) {
             console.log('Char 1 (SPEAKER): '+JSON.stringify(data));
             isSpeakerConnected = !isSpeakerConnected;
@@ -279,7 +292,8 @@ var app = {
     changeVibrationStatus: function() {
         console.log('Vibration Button tapped');
         let val;
-        (isVibrating) ? val = headers.VIBRATION_OFF : val = headers.VIBRATION_ON;
+        val = '0001';
+        // (isVibrating) ? val = headers.VIBRATION_OFF : val = headers.VIBRATION_ON;
         app.writeCharacteristic1(val, function(data) {
             console.log('Char 1 (VIBRATION): '+JSON.stringify(data));
             isVibrating = !isVibrating;
@@ -362,7 +376,7 @@ var app = {
         console.log("val: " + val);
         console.log("val type: " + typeof val);
         console.log(typeof val + " length: " + val.length);
-        if (val.length <= 1) {
+        if (val.length <= 4) {
             var vBuf = new Uint8Array(1);
             vBuf = stringToBytes(val);
 
