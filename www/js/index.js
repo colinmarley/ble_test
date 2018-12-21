@@ -234,22 +234,38 @@ var app = {
         console.log('scanbutton tapped');
         deviceList.innerHTML = "";  //Empties the list 
         //Scan for all devices
-        ble.scan([], 5, app.onDiscoverDevice, app.onError);
+        if (device.platform == 'iOS') {
+            ble.scan([uuids.service], 5, app.onDiscoverDevice, app.onError);
+        } else {
+            ble.scan([uuids.service], 5, app.onDiscoverDevice, app.onError);
+        }
     },
 
-    onDiscoverDevice: function(device) {
+    onDiscoverDevice: function(dev) {
         console.log('onDiscoverDevice');
         scanbutton.innerHTML = 'RESCAN';
         deviceList.hidden = false;
-        let uuid = generateServiceDataFromAdvertising(device.advertising);
+        if (device.platform =='Android') {
+            let uuid = generateServiceDataFromAdvertising(dev.advertising);
+        } else {
+            let temp;
+            let uuid = dev.advertising['kCBAdvDataServiceUUIDs'];
+            for (var i = 0; i < uuid.length; i ++) {
+                if (uuid[i] == uuids.service) {
+                    temp = uuid[i];
+                    break;
+                }
+            }
+            uuid = temp;
+        }
         if (uuid == uuids.service) {
-            console.log(JSON.stringify(device));
+            console.log(JSON.stringify(dev));
             var listItem = document.createElement('li'),
-                html = '<b>' + device.name + '</b><br/>' +
-                    'RSSI: ' + device.rssi + '&nbsp;|&nbsp;' +
-                    device.id;
+                html = '<b>' + dev.name + '</b><br/>' +
+                    'RSSI: ' + dev.rssi + '&nbsp;|&nbsp;' +
+                    dev.id;
 
-            listItem.dataset.deviceId = device.id;  // TODO
+            listItem.dataset.deviceId = dev.id;  // TODO
             listItem.innerHTML = html;
             deviceList.appendChild(listItem);
         }
@@ -257,7 +273,7 @@ var app = {
 
     connect: function(e) {
         deviceId = e.target.dataset.deviceId;
-        var onConnect = function(device) {
+        var onConnect = function(dev) {
             isConnected = true;
             app.writeCharacteristic1(0x00, function(data) { console.log('initialize characteristic 1'); }, app.onError);
             // ble.startNotification(deviceId, uuids.service, uuids.char1, function(buffer) {
@@ -269,9 +285,9 @@ var app = {
             app.readCharacteristic3();
             app.readCharacteristic4();
             scanbutton.hidden = true;
-            deviceList.innerHTML = "<h3 class='confirmation'>Connected To: " + device.name + "</h3>";
+            deviceList.innerHTML = "<h3 class='confirmation'>Connected To: " + dev.name + "</h3>";
             };
-        ble.connect(deviceId, (device) => onConnect(device), app.onError);
+        ble.connect(deviceId, (dev) => onConnect(dev), app.onError);
     },
 
     changeRecordStatus: function() {
