@@ -110,5 +110,4 @@
         <variable name="BLUETOOTH_USAGE_DESCRIPTION" value="ble testing" />
     </plugin>
     <gap:plugin name="cordova-plugin-ble-central" source="npm" />
-    <preference name="phonegap-version" value="cli-6.1.0" />
 </widget>
