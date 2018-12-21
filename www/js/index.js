@@ -176,6 +176,10 @@ var uuids = {
     char4: "dead1404-dead-c0de-dead-c0dedeadc0de"
 };
 
+var uuids_ios = {
+    service: "DEAD1400-DEAD-C0DE-DEAD-C0DEDEADC0DE",
+}
+
 const headers = {
     //Characteristic 1
     START_TIMER: '1',   //0x31
@@ -235,8 +239,10 @@ var app = {
         deviceList.innerHTML = "";  //Empties the list 
         //Scan for all devices
         if (device.platform == 'iOS') {
-            ble.scan([uuids.service], 5, app.onDiscoverDevice, app.onError);
+            console.log('ios device');
+            ble.scan([uuids_ios.service], 5, app.onDiscoverDevice, app.onError);
         } else {
+            console.log('android device');
             ble.scan([uuids.service], 5, app.onDiscoverDevice, app.onError);
         }
     },
@@ -254,14 +260,14 @@ var app = {
             uuid = dev.advertising['kCBAdvDataServiceUUIDs'];
             console.log('uuid: ', uuid);
             for (var i = 0; i < uuid.length; i ++) {
-                if (uuid[i] == uuids.service) {
+                if (uuid[i] == uuids.service || uuid[i] == uuids_ios.service) {
                     temp = uuid[i];
                     break;
                 }
             }
             uuid = temp;
         }
-        if (uuid == uuids.service) {
+        if (uuid == uuids.service || uuid == uuids_ios.service) {
             console.log(JSON.stringify(dev));
             var listItem = document.createElement('li'),
                 html = '<b>' + dev.name + '</b><br/>' +
