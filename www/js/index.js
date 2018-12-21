@@ -243,7 +243,7 @@ var app = {
             ble.scan([uuids_ios.service], 5, app.onDiscoverDevice, app.onError);
         } else {
             console.log('android device');
-            ble.scan([uuids.service], 5, app.onDiscoverDevice, app.onError);
+            ble.scan([], 5, app.onDiscoverDevice, app.onError);
         }
     },
 
@@ -252,6 +252,7 @@ var app = {
         scanbutton.innerHTML = 'RESCAN';
         deviceList.hidden = false;
         let uuid;
+        let ind;
         if (device.platform =='Android') {
             uuid = generateServiceDataFromAdvertising(dev.advertising);
         } else {
@@ -262,6 +263,7 @@ var app = {
             for (var i = 0; i < uuid.length; i ++) {
                 if (uuid[i] == uuids.service || uuid[i] == uuids_ios.service) {
                     temp = uuid[i];
+                    ind = i;
                     break;
                 }
             }
@@ -273,8 +275,11 @@ var app = {
                 html = '<b>' + dev.name + '</b><br/>' +
                     'RSSI: ' + dev.rssi + '&nbsp;|&nbsp;' +
                     dev.id;
-
-            listItem.dataset.deviceId = dev.id;  // TODO
+            if (device.platform == 'Android') {
+                listItem.dataset.deviceId = dev.id;  // TODO
+            } else {
+                listItem.dataset.deviceId = dev.advertising['kCBAdvDataServiceUUIDs'][ind];
+            }
             listItem.innerHTML = html;
             deviceList.appendChild(listItem);
         }
