@@ -245,11 +245,13 @@ var app = {
         console.log('onDiscoverDevice');
         scanbutton.innerHTML = 'RESCAN';
         deviceList.hidden = false;
+        let uuid;
         if (device.platform =='Android') {
-            let uuid = generateServiceDataFromAdvertising(dev.advertising);
+            uuid = generateServiceDataFromAdvertising(dev.advertising);
         } else {
+            
             let temp;
-            let uuid = dev.advertising['kCBAdvDataServiceUUIDs'];
+            uuid = dev.advertising['kCBAdvDataServiceUUIDs'];
             for (var i = 0; i < uuid.length; i ++) {
                 if (uuid[i] == uuids.service) {
                     temp = uuid[i];
