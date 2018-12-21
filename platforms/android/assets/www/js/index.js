@@ -20,6 +20,7 @@
 
 let deviceId;
 let isConnected = false,
+    isTimerRunning = false,
     isRecording = false,
     isMuted = false,
     isSpeakerConnected = false,
@@ -27,6 +28,17 @@ let isConnected = false,
 var chunkSize = 18;
 let TOPIC_HEADER = 0x36;
 const SERVICE_DATA_KEY = '0x07';
+var flags = 0x00;
+
+let masks = {
+    timerPause:   0xFE,   
+    timerStart:   0x01,
+    record:       0x02,
+    mute:         0x04,
+    speaker:      0x08,
+    vibration:    0x10,
+    bluetooth:    0x20
+};
 
 //Functions
 
@@ -159,7 +171,9 @@ function packChar2 (header, num, data) {
 var uuids = {
     service: "dead1400-dead-c0de-dead-c0dedeadc0de",
     char1: "dead1401-dead-c0de-dead-c0dedeadc0de",
-    char2: "dead1402-dead-c0de-dead-c0dedeadc0de"
+    char2: "dead1402-dead-c0de-dead-c0dedeadc0de",
+    char3: "dead1403-dead-c0de-dead-c0dedeadc0de",
+    char4: "dead1404-dead-c0de-dead-c0dedeadc0de"
 };
 
 const headers = {
@@ -220,7 +234,6 @@ var app = {
         console.log('scanbutton tapped');
         deviceList.innerHTML = "";  //Empties the list 
         //Scan for all devices
-        console.log('ble: ', ble);
         ble.scan([], 5, app.onDiscoverDevice, app.onError);
     },
 
@@ -245,59 +258,56 @@ var app = {
     connect: function(e) {
         deviceId = e.target.dataset.deviceId;
         var onConnect = function(device) {
-                ble.startNotification(deviceId, uuids.service, uuids.char1, function(buffer) {
-                    var data = Uint8Array(buffer);
-                    console.log('Data Changed: ', data);
-                }, app.onError);
-                scanbutton.hidden = true;
-                deviceList.innerHTML = "<h3 class='confirmation'>Connected To: " + device.name + "</h3>";
+            app.writeCharacteristic1(0x00, function(data) { console.log('initialize characteristic 1'); }, app.onError);
+            // ble.startNotification(deviceId, uuids.service, uuids.char1, function(buffer) {
+            //     var data = Uint8Array(buffer);
+            //     console.log('Data Changed: ', data);
+            // }, app.onError);
+            app.readCharacteristic1();
+            scanbutton.hidden = true;
+            deviceList.innerHTML = "<h3 class='confirmation'>Connected To: " + device.name + "</h3>";
             };
         ble.connect(deviceId, (device) => onConnect(device), app.onError);
     },
 
     changeRecordStatus: function() {
         console.log('Record Button Tapped');
-        let val;
-        (isRecording) ? val = '1000' : val = '0000';
-        // (isRecording) ? val = headers.RECORDING_OFF : val = headers.RECORDING_ON;
-        console.log('val: ', val);
-        app.writeCharacteristic1(val, function(data) {
+        flags = flags ^ masks.record;
+        app.writeCharacteristic1(flags, function(data) {
             console.log('Char 1 (RECORD): '+JSON.stringify(data));
-            isRecording = !isRecording;
+            // isRecording = (flags & masks.record) != 0; 
         }, app.onError);
+        app.readCharacteristic1();
     },
 
     changeMuteStatus: function() {
         console.log('Mute Button tapped');
-        let val;
-        val = '0100';
-        // (isMuted) ? val = headers.UNMUTE_AUDIO : val = headers.MUTE_AUDIO;
-        app.writeCharacteristic1(val, function(data) {
+        flags = flags ^ masks.mute;
+        app.writeCharacteristic1(flags, function(data) {
             console.log('Char 1 (MUTE): '+JSON.stringify(data));
-            isMuted = !isMuted;
+            // isMuted = (flags & masks.mute) != 0;
         }, app.onError);
+        app.readCharacteristic1();
     },
 
     changeSpeakerStatus: function() {
         console.log('Speaker Button tapped');
-        let val;
-        val = '0010';
-        // (isSpeakerConnected) ? val = headers.SPEAKER_OFF : val = headers.SPEAKER_ON;
-        app.writeCharacteristic1(val, function(data) {
+        flags = flags ^ masks.speaker;
+        app.writeCharacteristic1(flags, function(data) {
             console.log('Char 1 (SPEAKER): '+JSON.stringify(data));
-            isSpeakerConnected = !isSpeakerConnected;
+            // isSpeakerConnected = (flags & masks.speaker) != 0;
         }, app.onError);
+        app.readCharacteristic1();
     },
 
     changeVibrationStatus: function() {
         console.log('Vibration Button tapped');
-        let val;
-        val = '0001';
-        // (isVibrating) ? val = headers.VIBRATION_OFF : val = headers.VIBRATION_ON;
-        app.writeCharacteristic1(val, function(data) {
+        flags = flags ^ masks.vibration;
+        app.writeCharacteristic1(flags, function(data) {
             console.log('Char 1 (VIBRATION): '+JSON.stringify(data));
-            isVibrating = !isVibrating;
+            // isVibrating = (flags & masks.vibration) != 0;
         }, app.onError);
+        app.readCharacteristic1();
     },
 
     changeTimer: function() {
@@ -306,7 +316,7 @@ var app = {
         let val = headers.SET_TIMER + timerText;
         console.log('timerText: ', timerText);
         app.writeCharacteristic2(val, function(data) {
-            console.log('Char 2 (SET TIMER): '+JSON.stringify(data));
+            // console.log('Char 2 (SET TIMER): '+JSON.stringify(data));
         }, app.onError);
     },
 
@@ -318,7 +328,7 @@ var app = {
         app.writeCharacteristic2(val, function(data) {
             console.log('Char 2 (SET TOPIC): '+JSON.stringify(data));
         }, app.onError);
-
+        
     },
 
     changeVolume: function() {
@@ -328,28 +338,22 @@ var app = {
 
     startTimer: function(event) {
         console.log("Start Pressed");
-        var val = String(1);
-        app.writeCharacteristic1(val, function(data) {
+        flags = flags | masks.timerStart;
+        app.writeCharacteristic1(flags, function(data) {
             console.log('Char 1 (START TIMER): '+JSON.stringify(data));
-        }, app.onError);
-        // var vBuf = new Uint8Array(1);
-        // console.log ("val type: " + typeof val);
-        // console.log("val: " + val);
-        // vBuf = stringToBytes(val);
-        // ble.write(deviceId, uuids.service, uuids.char1, vBuf, console.log("Started Timer: data = 0x31"), app.onError);   
+            // isTimerRunning = (flags & masks.timerCheck) != 0;
+        }, app.onError); 
+        app.readCharacteristic1();
     },
 
     pauseTimer: function(event) {
         console.log("Pause Pressed");
-        var val = String(2);
-        app.writeCharacteristic1(val, function(data) {
+        flags = flags & masks.timerPause;
+        app.writeCharacteristic1(flags, function(data) {
             console.log('Char 1 (PAUSE TIMER): '+JSON.stringify(data));
+            // isTimerRunning = (flags & masks.timerCheck) != 0;
         }, app.onError);
-        // var vBuf = new Uint8Array(1);
-        // console.log ("val type: " + typeof val);
-        // console.log("val: " + val);
-        // vBuf = stringToBytes(val);
-        // ble.write(deviceId, uuids.service, uuids.char1, vBuf, console.log("Paused Timer: data = 0x32"), app.onError);
+        app.readCharacteristic1();
     },
 
     changeCustomCharacteristic1(e) {
@@ -370,22 +374,19 @@ var app = {
 
     writeCharacteristic1: function(val, onSuccess, onError) {
         console.log("writeCharacteristic1");
-        if (val == null) {
-            val = document.getElementById("writeText1").value;
-        }
         console.log("val: " + val);
         console.log("val type: " + typeof val);
         console.log(typeof val + " length: " + val.length);
-        if (val.length <= 4) {
-            var vBuf = new Uint8Array(1);
-            vBuf = stringToBytes(val);
+        var data = new Uint8Array(1);
+        data[0] = val;
+        var vBuf = new Uint8Array(1);
+        vBuf = data.buffer;
+        console.log(vBuf);  //should be an array buffer by now
 
-            console.log(vBuf);  //should be an array buffer by now
+        ble.write(deviceId, uuids.service, uuids.char1, vBuf, onSuccess, onError);
 
-            ble.write(deviceId, uuids.service, uuids.char1, vBuf, onSuccess, onError);
-        } else {
-            alert("Please limit to 1 Character");
-        }
+        
+
     },
 
     writeCharacteristic2: function(val, onSuccess, onError) {
@@ -405,30 +406,88 @@ var app = {
         }
     },
 
-    readCharacteristic1: function(event) {
+    readCharacteristic1: function() {
         console.log("readCharacteristic1");
         ble.read(deviceId, uuids.service, uuids.char1, app.onReadCharacteristic1, app.onError);
     },
 
-    readCharacteristic2: function(event) {
+    readCharacteristic2: function() {
         console.log("readCharacteristic");
         ble.read(deviceId, uuids.service, uuids.char2, app.onReadCharacteristic2, app.onError);
     },
 
-    onReadCharacteristic1: function(data) {
-        console.log("Data: " + data);
-        var val = String.fromCharCode.apply(null, new Uint8Array(data));
-        console.log("Read " + val + " as value of characteristic 1");
-
-        document.getElementById("readText1").value = val;
+    readCharacteristic3: function() {
+        console.log("readCharacteristic");
+        ble.read(deviceId, uuids.service, uuids.char3, app.onReadCharacteristic3, app.onError);
     },
 
-     onReadCharacteristic2: function(data) {
+    readCharacteristic4: function() {
+        console.log("readCharacteristic");
+        ble.read(deviceId, uuids.service, uuids.char4, app.onReadCharacteristic4, app.onError);
+    },
+
+    onReadCharacteristic1: function(data) {
+        console.log("Data: " + data);
+        let i = 0;
+        var val = String.fromCharCode.apply(null, new Uint8Array(data));
+        var temp = val.charCodeAt(i);
+        console.log(temp);
+        console.log('Temp Type: ', typeof temp);
+        console.log("Read " + temp + " as value of characteristic 1");
+
+        app.updateFlags(temp);
+    },
+
+    onReadCharacteristic2: function(data) {
         console.log("Data: " + data);
         var val = String.fromCharCode.apply(null, new Uint8Array(data));
         console.log("Read " + val + " as value of characteristic 2");
+    },
 
-        document.getElementById("readText2").value = val;
+    onReadCharacteristic3: function(data) {
+        console.log("Data: " + data);
+        var val = String.fromCharCode.apply(null, new Uint8Array(data));
+        console.log("Read " + val + " as value of characteristic 3");
+    },
+
+    onReadCharacteristic4: function(data) {
+        console.log("Data: " + data);
+        var val = String.fromCharCode.apply(null, new Uint8Array(data));
+        console.log("Read " + val + " as value of characteristic 4");
+    },
+
+    updateFlags: function(byte) {
+        var time = 'OFF',
+            rec = 'OFF',
+            mute = 'OFF',
+            speak = 'OFF',
+            vibe = 'OFF',
+            conn = 'NOT CONNECTED';
+        if ((byte & 0b00001) != 0) {
+            time = 'ON';
+        }
+        if ((byte & 0b00010) != 0) {
+            rec = 'ON';
+        }
+        if ((byte & 0b00100) != 0) {
+            mute = 'ON';
+        }
+        if ((byte & 0b01000) != 0) {
+            speak = 'ON';
+        }
+        if ((byte & 0b10000) != 0) {
+            vibe = 'ON';
+        }
+        if (isConnected) {
+            conn = 'CONNECTED';
+        }
+        recordingReading.innerHTML = 'Recording: ' + rec;  
+        muteReading.innerHTML = 'Mute: ' + mute;
+        speakerReading.innerHTML = 'Speaker: ' + speak;
+        vibrationReading.innerHTML = 'Vibration: ' + vibe;  
+        batteryReading.innerHTML = 'MID';
+        bluetoothReading.innerHTML = conn;
+
     },
 
     disconnect: function(event) {
