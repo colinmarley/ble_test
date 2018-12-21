@@ -258,12 +258,16 @@ var app = {
     connect: function(e) {
         deviceId = e.target.dataset.deviceId;
         var onConnect = function(device) {
+            isConnected = true;
             app.writeCharacteristic1(0x00, function(data) { console.log('initialize characteristic 1'); }, app.onError);
             // ble.startNotification(deviceId, uuids.service, uuids.char1, function(buffer) {
             //     var data = Uint8Array(buffer);
             //     console.log('Data Changed: ', data);
             // }, app.onError);
             app.readCharacteristic1();
+            app.readCharacteristic2();
+            app.readCharacteristic3();
+            app.readCharacteristic4();
             scanbutton.hidden = true;
             deviceList.innerHTML = "<h3 class='confirmation'>Connected To: " + device.name + "</h3>";
             };
@@ -315,9 +319,10 @@ var app = {
         let timerText = document.getElementById('timer-text').value;
         let val = headers.SET_TIMER + timerText;
         console.log('timerText: ', timerText);
-        app.writeCharacteristic2(val, function(data) {
-            // console.log('Char 2 (SET TIMER): '+JSON.stringify(data));
-        }, app.onError);
+        app.writeCharacteristic(val, function(data) {
+            console.log('Char 3 (SET TIMER): '+JSON.stringify(data));
+        }, app.onError, uuids.char3);
+        app.readCharacteristic3();
     },
 
     changeTopic: function() {
@@ -325,10 +330,10 @@ var app = {
         let topicText = document.getElementById('topic-text').value;
         let val = headers.SET_TOPIC + topicText.length.toString() + topicText;
         console.log('topicText: ', topicText);
-        app.writeCharacteristic2(val, function(data) {
+        app.writeCharacteristic(val, function(data) {
             console.log('Char 2 (SET TOPIC): '+JSON.stringify(data));
-        }, app.onError);
-        
+        }, app.onError, uuids.char2);
+        app.readCharacteristic2();
     },
 
     changeVolume: function() {
@@ -365,11 +370,27 @@ var app = {
     },
 
     changeCustomCharacteristic2(e) {
-        var val = document.getElementById('writeText2').value;
+        var val = document.getElementById('writeText1').value;
         console.log('val (Char 2): ', val);
-        app.writeCharacteristic2(val, function(data) {
+        app.writeCharacteristic(val, function(data) {
             console.log('Char 2 (CUSTOM COMMAND): '+JSON.stringify(data));
-        }, app.onError);
+        }, app.onError, uuids.char2);
+    },
+
+    changeCustomCharacteristic3(e) {
+        var val = document.getElementById('writeText1').value;
+        console.log('val (Char 3): ', val);
+        app.writeCharacteristic(val, function(data) {
+            console.log('Char 3 (CUSTOM COMMAND): '+JSON.stringify(data));
+        }, app.onError, uuids.char3);
+    },
+
+    changeCustomCharacteristic4(e) {
+        var val = document.getElementById('writeText1').value;
+        console.log('val (Char 4): ', val);
+        app.writeCharacteristic(val, function(data) {
+            console.log('Char 4 (CUSTOM COMMAND): '+JSON.stringify(data));
+        }, app.onError, uuids.char4);
     },
 
     writeCharacteristic1: function(val, onSuccess, onError) {
@@ -384,13 +405,10 @@ var app = {
         console.log(vBuf);  //should be an array buffer by now
 
         ble.write(deviceId, uuids.service, uuids.char1, vBuf, onSuccess, onError);
-
-        
-
     },
 
-    writeCharacteristic2: function(val, onSuccess, onError) {
-        console.log("writeCharacteristic2");
+    writeCharacteristic: function(val, onSuccess, onError, characteristic) {
+        console.log("writeCharacteristic");
         console.log("val: " + val);
         console.log("val type: " + typeof val);
         console.log(typeof val + " length: " + val.length);
@@ -400,7 +418,7 @@ var app = {
 
             console.log(vBuf);  //should be an array buffer by now
 
-            ble.write(deviceId, uuids.service, uuids.char2, vBuf, onSuccess, onError);
+            ble.write(deviceId, uuids.service, characteristic, vBuf, onSuccess, onError);
         } else {
             alert('please limit to 18 characters');
         }
@@ -442,12 +460,14 @@ var app = {
         console.log("Data: " + data);
         var val = String.fromCharCode.apply(null, new Uint8Array(data));
         console.log("Read " + val + " as value of characteristic 2");
+        app.updateTopic(val);
     },
 
     onReadCharacteristic3: function(data) {
         console.log("Data: " + data);
         var val = String.fromCharCode.apply(null, new Uint8Array(data));
         console.log("Read " + val + " as value of characteristic 3");
+        app.updateTimer(val);
     },
 
     onReadCharacteristic4: function(data) {
@@ -485,12 +505,31 @@ var app = {
         muteReading.innerHTML = 'Mute: ' + mute;
         speakerReading.innerHTML = 'Speaker: ' + speak;
         vibrationReading.innerHTML = 'Vibration: ' + vibe;  
-        batteryReading.innerHTML = 'MID';
-        bluetoothReading.innerHTML = conn;
+        batteryReading.innerHTML = 'Battery: MID';
+        bluetoothReading.innerHTML = 'Bluetooth: ' + conn;
+
+    },
+
+    updateTopic: function(val) {
+        let start = 2;
+        if(val.length > 11) {
+            start = 3;
+        }
+        var temp = val.slice(start, val.length);
+        topicReading.innerHTML = 'Topic: ' + temp;
+    },
+
+    updateTimer: function(val) {
+        var temp = val.slice(1, val.length);
+        timerReading.innerHTML = 'Timer: ' + temp;
+    },
+
+    updateVolume: function() {
 
     },
 
     disconnect: function(event) {
+        isConnected = false;
         ble.disconnect(deviceId, app.showMainPage, app.onError);
     },
 
@@ -498,10 +537,6 @@ var app = {
         scanbutton.innerHTML = 'SCAN';
         scanbutton.hidden = false;
         deviceList.hidden = true;
-    },
-
-    showDetailPage: function() {
-        
     },
 
     onError: function(reason) {

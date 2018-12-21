@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Gradle: __local_aars__:C.\Users\cmarley\Documents\Work\PhoneGap\ble_test\platforms\android\libs\sqlite-connector.jar:unspecified@jar">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/libs/sqlite-connector.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
