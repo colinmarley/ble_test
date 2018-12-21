@@ -252,6 +252,7 @@ var app = {
             
             let temp;
             uuid = dev.advertising['kCBAdvDataServiceUUIDs'];
+            console.log('uuid: ', uuid);
             for (var i = 0; i < uuid.length; i ++) {
                 if (uuid[i] == uuids.service) {
                     temp = uuid[i];
