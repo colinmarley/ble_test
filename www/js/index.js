@@ -271,15 +271,20 @@ var app = {
         }
         if (uuid == uuids.service || uuid == uuids_ios.service) {
             console.log(JSON.stringify(dev));
-            var listItem = document.createElement('li'),
+            var listItem, html;
+                
+            if (device.platform == 'Android') {
+                listItem = document.createElement('li');
                 html = '<b>' + dev.name + '</b><br/>' +
                     'RSSI: ' + dev.rssi + '&nbsp;|&nbsp;' +
                     dev.id;
-            if (device.platform == 'Android') {
-                listItem.dataset.deviceId = dev.id;  // TODO
             } else {
-                listItem.dataset.deviceId = dev.advertising['kCBAdvDataServiceUUIDs'][ind];
+                listItem = document.createElement('li');
+                html = '<b>' + dev.advertising['kCBAdvDataLocalName'] + '</b><br/>' +
+                    'RSSI: ' + dev.rssi + '&nbsp;|&nbsp;' +
+                    dev.id;
             }
+            listItem.dataset.deviceId = dev.id;  // TODO
             listItem.innerHTML = html;
             deviceList.appendChild(listItem);
         }
