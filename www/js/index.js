@@ -496,7 +496,7 @@ var app = {
 
         app.writeCustomCharacteristic(val, function(data) {
             console.log('successfully wrote to characteristic 5: ' + data);
-        }, app.onError(), uuids.char5);
+        }, app.onError uuids.char5);
     },
 
     writeCustomCommandField2: function(e) {
@@ -516,7 +516,7 @@ var app = {
 
         app.writeCustomCharacteristic(val, function(data) {
             console.log('successfully wrote to characteristic 6: ' + data);
-        }, app.onError(), uuids.char6);
+        }, app.onError, uuids.char6);
     },
 
     readCharacteristic1: function() {
@@ -635,6 +635,6 @@ var app = {
     },
 
     onError: function(reason) {
-        alert("ERROR: " + reason); // real apps should use notification.alert
+        alert("ERROR: " + reason.message); // real apps should use notification.alert
     }
 };
