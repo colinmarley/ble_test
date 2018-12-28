@@ -483,7 +483,7 @@ var app = {
         }, app.onError(), uuids.char5);
     },
 
-    writeCustomCommandField: function(e) {
+    writeCustomCommandField2: function(e) {
         // write custom value to characteristic 6
         var head = parseInt(document.getElementById('cus-head').value) & 0xFF;
         var val1 = parseInt(document.getElementById('cus1').value) & 0xFF;
