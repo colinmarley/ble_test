@@ -478,7 +478,7 @@ var app = {
         val[3] = val3;
         val[4] = val4;
 
-        writeCharacteristic(val, function(data) {
+        app.writeCharacteristic(val, function(data) {
             console.log('successfully wrote to characteristic 5: ' + data);
         }, app.onError(), uuids.char5);
     },
@@ -498,7 +498,7 @@ var app = {
         val[3] = val3;
         val[4] = val4;
 
-        writeCharacteristic(val, function(data) {
+        app.writeCharacteristic(val, function(data) {
             console.log('successfully wrote to characteristic 6: ' + data);
         }, app.onError(), uuids.char6);
     },
