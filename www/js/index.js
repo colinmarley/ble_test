@@ -463,6 +463,22 @@ var app = {
         }
     },
 
+    writeCustomCharacteristic: function(val, onSuccess, onError, characteristic) {
+        console.log("val: " + val);
+        console.log("val type: " + typeof val);
+        console.log(typeof val + " length: " + val.length);
+        if (val.length <= 20) {
+            var vBuf = new Uint8Array(20);
+            vBuf = val.buffer;
+
+            console.log(vBuf);  //should be an array buffer by now
+
+            ble.write(deviceId, uuids.service, characteristic, vBuf, onSuccess, onError);
+        } else {
+            alert('please limit to 18 characters');
+        }
+    },
+
     writeCustomCommandField: function(e) {
         // write custom value to characteristic 5
         var head = parseInt(document.getElementById('cus-head').value) & 0xFF;
@@ -478,7 +494,7 @@ var app = {
         val[3] = val3;
         val[4] = val4;
 
-        app.writeCharacteristic(val, function(data) {
+        app.writeCustomCharacteristic(val, function(data) {
             console.log('successfully wrote to characteristic 5: ' + data);
         }, app.onError(), uuids.char5);
     },
@@ -498,7 +514,7 @@ var app = {
         val[3] = val3;
         val[4] = val4;
 
-        app.writeCharacteristic(val, function(data) {
+        app.writeCustomCharacteristic(val, function(data) {
             console.log('successfully wrote to characteristic 6: ' + data);
         }, app.onError(), uuids.char6);
     },
