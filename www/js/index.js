@@ -173,7 +173,9 @@ var uuids = {
     char1: "dead1401-dead-c0de-dead-c0dedeadc0de",
     char2: "dead1402-dead-c0de-dead-c0dedeadc0de",
     char3: "dead1403-dead-c0de-dead-c0dedeadc0de",
-    char4: "dead1404-dead-c0de-dead-c0dedeadc0de"
+    char4: "dead1404-dead-c0de-dead-c0dedeadc0de",
+    char5: "dead1405-dead-c0de-dead-c0dedeadc0de",
+    char6: "dead1406-dead-c0de-dead-c0dedeadc0de"
 };
 
 var uuids_ios = {
@@ -226,6 +228,8 @@ var app = {
         writeChar1Button.addEventListener('touchstart', this.changeCustomCharacteristic1, false);
         writeChar2Button.addEventListener('touchstart', this.changeCustomCharacteristic2, false);
 
+        writeCustomButton.addEventListener('touchstart', this.writeCustomCommandField, false);
+        writeCustomButton2.addEventListener('touchstart', this.writeCustomCommandField2, false)
         disconnectButton.addEventListener('touchstart', this.disconnect, false);
     },
 
@@ -457,6 +461,46 @@ var app = {
         } else {
             alert('please limit to 18 characters');
         }
+    },
+
+    writeCustomCommandField: function(e) {
+        // write custom value to characteristic 5
+        var head = parseInt(document.getElementById('cus-head').value) & 0xFF;
+        var val1 = parseInt(document.getElementById('cus1').value) & 0xFF;
+        var val2 = parseInt(document.getElementById('cus2').value) & 0xFF;
+        var val3 = parseInt(document.getElementById('cus3').value) & 0xFF;
+        var val4 = parseInt(document.getElementById('cus4').value) & 0xFF;
+
+        let val = new Uint8Array(5);
+        val[0] = head;
+        val[1] = val1;
+        val[2] = val2;
+        val[3] = val3;
+        val[4] = val4;
+
+        writeCharacteristic(val, function(data) {
+            console.log('successfully wrote to characteristic 5: ' + data);
+        }, app.onError(), uuids.char5);
+    },
+
+    writeCustomCommandField: function(e) {
+        // write custom value to characteristic 6
+        var head = parseInt(document.getElementById('cus-head').value) & 0xFF;
+        var val1 = parseInt(document.getElementById('cus1').value) & 0xFF;
+        var val2 = parseInt(document.getElementById('cus2').value) & 0xFF;
+        var val3 = parseInt(document.getElementById('cus3').value) & 0xFF;
+        var val4 = parseInt(document.getElementById('cus4').value) & 0xFF;
+
+        let val = new Uint8Array(5);
+        val[0] = head;
+        val[1] = val1;
+        val[2] = val2;
+        val[3] = val3;
+        val[4] = val4;
+
+        writeCharacteristic(val, function(data) {
+            console.log('successfully wrote to characteristic 6: ' + data);
+        }, app.onError(), uuids.char6);
     },
 
     readCharacteristic1: function() {
