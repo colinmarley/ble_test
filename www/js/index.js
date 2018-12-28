@@ -496,7 +496,7 @@ var app = {
 
         app.writeCustomCharacteristic(val, function(data) {
             console.log('successfully wrote to characteristic 5: ' + data);
-        }, app.onError uuids.char5);
+        }, app.onError, uuids.char5);
     },
 
     writeCustomCommandField2: function(e) {
