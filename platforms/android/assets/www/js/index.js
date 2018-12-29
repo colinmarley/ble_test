@@ -229,6 +229,7 @@ var app = {
         writeChar2Button.addEventListener('touchstart', this.changeCustomCharacteristic2, false);
 
         writeCustomButton.addEventListener('touchstart', this.writeCustomCommandField, false);
+        writeCustomButton2.addEventListener('touchstart', this.writeCustomCommandField2, false)
         disconnectButton.addEventListener('touchstart', this.disconnect, false);
     },
 
@@ -462,7 +463,43 @@ var app = {
         }
     },
 
+    writeCustomCharacteristic: function(val, onSuccess, onError, characteristic) {
+        console.log("val: " + val);
+        console.log("val type: " + typeof val);
+        console.log(typeof val + " length: " + val.length);
+        if (val.length <= 20) {
+            var vBuf = new Uint8Array(20);
+            vBuf = val.buffer;
+
+            console.log(vBuf);  //should be an array buffer by now
+
+            ble.write(deviceId, uuids.service, characteristic, vBuf, onSuccess, onError);
+        } else {
+            alert('please limit to 18 characters');
+        }
+    },
+
     writeCustomCommandField: function(e) {
+        // write custom value to characteristic 5
+        var head = parseInt(document.getElementById('cus-head').value) & 0xFF;
+        var val1 = parseInt(document.getElementById('cus1').value) & 0xFF;
+        var val2 = parseInt(document.getElementById('cus2').value) & 0xFF;
+        var val3 = parseInt(document.getElementById('cus3').value) & 0xFF;
+        var val4 = parseInt(document.getElementById('cus4').value) & 0xFF;
+
+        let val = new Uint8Array(5);
+        val[0] = head;
+        val[1] = val1;
+        val[2] = val2;
+        val[3] = val3;
+        val[4] = val4;
+
+        app.writeCustomCharacteristic(val, function(data) {
+            console.log('successfully wrote to characteristic 5: ' + data);
+        }, app.onError, uuids.char5);
+    },
+
+    writeCustomCommandField2: function(e) {
         // write custom value to characteristic 6
         var head = parseInt(document.getElementById('cus-head').value) & 0xFF;
         var val1 = parseInt(document.getElementById('cus1').value) & 0xFF;
@@ -471,12 +508,15 @@ var app = {
         var val4 = parseInt(document.getElementById('cus4').value) & 0xFF;
 
         let val = new Uint8Array(5);
-        console.log(typeof val1 + 'val1: ' + val1);
-        console.log(typeof val2 + 'val2: ' + val2);
-        console.log(typeof val3 + 'val3: ' + val3);
-        console.log(typeof val4 + 'val4: ' + val4);
+        val[0] = head;
+        val[1] = val1;
+        val[2] = val2;
+        val[3] = val3;
+        val[4] = val4;
 
-        
+        app.writeCustomCharacteristic(val, function(data) {
+            console.log('successfully wrote to characteristic 6: ' + data);
+        }, app.onError, uuids.char6);
     },
 
     readCharacteristic1: function() {
@@ -595,6 +635,8 @@ var app = {
     },
 
     onError: function(reason) {
-        alert("ERROR: " + reason); // real apps should use notification.alert
+        console.log(reason);
+        console.log('error: ' + JSON.stringify(reason));
+        console.log("ERROR: " + reason.message); // real apps should use notification.alert
     }
 };

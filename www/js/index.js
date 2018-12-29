@@ -635,6 +635,8 @@ var app = {
     },
 
     onError: function(reason) {
-        alert("ERROR: " + reason.message); // real apps should use notification.alert
+        console.log(reason);
+        console.log('error: ' + JSON.stringify(reason));
+        console.log("ERROR: " + reason.message); // real apps should use notification.alert
     }
 };
